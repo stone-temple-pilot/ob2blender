@@ -29,13 +29,13 @@ Assuming no errors, your model should work in-game when implemented!
 * Supports double-sided faces. Make sure to tick on Backface Culling to view them properly.
 * Priority, face labels, vertex labels, and alpha are all assigned as attributes; see below.
 * Smooth- and flat-shading support.
-* Material colors rely on diffuse_color, i.e. viewport display color. Set all material colors there.
 * Automatically convert a material's color to a specified RGB15 value with the naming scheme '15_value'
 	* Ex. naming a material 15_4390 will automatically change its color on export to RGB15 value 4390.
 	* Range: 0 to 32767.
-	* To be used with LostCity Model and Anim Editor's color picker tool, as well as recolors in Lost City config files.
+	* Intended for use with Lost City Model and Anim Editor's color picker tool, as well as recolors in Lost City config files.
 
 ## Constraints
+* Material colors rely on diffuse_color, i.e. viewport display color. Set all material colors there.
 * All vertex values (x, y, z) will round to the nearest integer when exporting. The integer values of an imported .ob2 in Blender are the true values encoded in the file. 
 	Press N in Blender to view the values of a selected vertex.
 * Face labels, vertex labels, priorities, and alpha are all controlled by the Attribute system.
@@ -64,6 +64,7 @@ Assuming no errors, your model should work in-game when implemented!
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
