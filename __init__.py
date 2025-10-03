@@ -3,7 +3,7 @@ import os
 
 bl_info = {
     "name":         "ob2blender",
-    "author":       "Tamatea, stone-temple-pilot",
+    "author":       "stone-temple-pilot",
     "blender": (3, 4, 1),
     "version": (1, 0, 0),
     "location":     "File > Import-Export",
