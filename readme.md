@@ -12,7 +12,8 @@ It is also tailored for use alongside AmVoidGuy's Lost City Model and Anim Edito
 
 ## Installation Instructions
 1. **Installation:** Download the plugin and install it in Blender following the standard plugin installation process.
-2. **Importing Models:** Select file->import/export->Runescape Model (.ob2)
+   * **You may need to rename the folder manually, i.e. ob2blender-main to ob2blender.**
+3. **Importing Models:** Select file->import/export->Runescape Model (.ob2)
 
 ## Basic Instructions
 1. Import an .ob2 format model using Import -> RuneScape Model (.ob2).
@@ -54,11 +55,15 @@ Assuming no errors, your model should work in-game when implemented!
 * Chathead exporting does not yet work due to 'pop an empty set' error.
 * RGB15 conversion converts color but can show up as 'undefined' in Lost City Model and Anim Editor color picker tool. Likely due to rounding error.
 * Checking attribute values kind of sucks. Looking for a better solution.
+* Useless error saying something about NoneType appears.
 
 ---
 
 *This plugin is developed independently and is not affiliated with Jagex or RuneScape in any way.*
+
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
+
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
