@@ -15,97 +15,45 @@ def read_mesh(filepath):
     except IOError:
         print("Error: Failed to read file.")
 
-#To do: actually import and use real materials rather than a UV map to a palette texture.
-def apply_HSV_material(rs_mesh, blender_mesh):
-    if rs_mesh.face_indices_a and rs_mesh.face_indices_b and rs_mesh.face_indices_c:
-        mesh = blender_mesh
-        mesh.materials.clear()
-        hsl_bit_cache = []
-
-        #first we're going to store all the bits of the color we need to make a material
-        for face in range(rs_mesh.face_count):
-            face_color = rs_mesh.face_colors[face]
-            #print("Checking face number: ", face, "with face color: ", face_color)
-            if face_color not in hsl_bit_cache:
-                hsl_bit_cache.append(face_color) #we can check from this
-                #H has 6 bits, S has 3 bits, L has 7 bits
-                H = (face_color >> 10) & 0x3F
-                S = (face_color >> 7) & 0x07
-                L = face_color & 0x7F
-                r, g, b = colorsys.hsv_to_rgb(H / 63.0, S / 7.0, L / 127.0)
-                rgba = tuple(round(n, 4) for n in (r,g,b,1.0))
-                #nomen = 'mat' + str(hsl_bit_cache.index(face_color))
-                nomen = 'H' + str(H) + '_S' + str(S) + '_L' + str(L)
-                mat = bpy.data.materials.new(name=nomen)
-                mat.diffuse_color = rgba #I need solid mode to enable backface culling, which is crucial for lowpoly models.
-                mesh.materials.append(mat)
-            mesh.polygons[face].material_index = hsl_bit_cache.index(face_color) #applies face color
-
-    #     for face in range(rs_mesh.face_count):
-    #         if rs_mesh.texture_ids is not None and rs_mesh.texture_ids[face] != -1:
-    #             uv_coordinates = get_uv_from_pmn(rs_mesh, face)
-    #             for uv_coord in zip(uv_coordinates[0], uv_coordinates[1]):
-    #                 uv_data[i] = uv_coord
-    #                 i += 1
-
+def load(self):
+    mesh = read_mesh(self.filepath)
+    create_blender_mesh(mesh, self.filepath)
+    return {"FINISHED"}
 
 def create_blender_mesh(rs_mesh, filepath):
     # Create a new mesh
     blender_mesh = bpy.data.meshes.new("Mesh")
 
     # since it's runescapes XYZ is different, and y axis inverted
-    # vertices = [
-    #     ((rs_mesh.vertices_x[i] * 0.0078125), rs_mesh.vertices_z[i] * 0.0078125, (-rs_mesh.vertices_y[i] * 0.0078125))
     vertices = [(rs_mesh.vertices_x[i], rs_mesh.vertices_z[i], -rs_mesh.vertices_y[i]) for i in range(rs_mesh.vertex_count)]
-    #when I write the export script, this will need to be reversed.
+
     # Set faces
     faces = [(rs_mesh.face_indices_a[i], rs_mesh.face_indices_b[i], rs_mesh.face_indices_c[i]) for i in
              range(rs_mesh.face_count)]
+    
     # Set the mesh data
     # validate/filter faces before passing to Blender
     valid_faces = validate_and_filter_faces(rs_mesh, vertices, faces)
     blender_mesh.from_pydata(vertices, [], valid_faces)
     blender_mesh.update()
 
-    # Set the uv data for each face
-    
-    rs_mesh.create_groups()
-    apply_HSV_material(rs_mesh, blender_mesh) #runescape colors are stored as HSL16 values
-    #going to need commands to apply smoothshading/flatshading data.
 
-    # Create a new object for the mesh
-    # Shall be named the same as the imported file name.
     filename = os.path.splitext(os.path.basename(filepath))[0]
     obj = bpy.data.objects.new(filename, blender_mesh)
 
-    vertex_group_labels = set(rs_mesh.vertex_labels)  # Get unique vertex labels
+    
 
-    for label in vertex_group_labels:
-            vertex_group = obj.vertex_groups.new(name=f"{label}")
-            vertex_indices = [i for i, value in enumerate(rs_mesh.vertex_labels) if value == label]
-            weight = label / 100.0
-            vertex_group.add(vertex_indices, weight, 'REPLACE')
-            # Set the same weight for all vertices in the group
-            for vertex_index in vertex_indices:
-                vertex_group.add([vertex_index], weight, 'REPLACE')
-
-    #look at face_draw_types for smooth/flat shading, texture or no texture.
-    # Set smooth/flat shading for polygons
-    use_draw_types = rs_mesh.face_draw_types if rs_mesh.face_draw_types else [0] * rs_mesh.face_count
-    for i, poly in enumerate(blender_mesh.polygons):
-        poly.use_smooth = (use_draw_types[i] != 1)
-
-    # for face in range(rs_mesh.face_count): #assigns materials
-    #     if rs_mesh.face_alphas is not None and len(rs_mesh.face_alphas) > 0 and rs_mesh.face_alphas[face] != 0:
-    #         alpha = rs_mesh.face_alphas[face]
-    #         mat = Materials.create_or_get_alpha_palette_material(obj, alpha)
-    #         obj.data.polygons[face].material_index = obj.data.materials.find(mat.name)
-    #     elif rs_mesh.texture_ids is not None and rs_mesh.texture_ids[face] != -1:
-    #         texture_id = rs_mesh.texture_ids[face]
-    #         mat = Materials.create_or_get_runescape_texture_material(obj, texture_id)
-    #         obj.data.polygons[face].material_index = obj.data.materials.find(mat.name)
-    #     else:
-    #          obj.data.polygons[face].material_index = obj.data.materials.find("palette")
+    #now assign colors, and handle if both color and texture exist.
+    create_or_get_material(rs_mesh, blender_mesh) #runescape colors are stored as HSL16 values
+    #the following is just to set the proper shading, referring to face_draw_types again.
+    use_draw_types = rs_mesh.face_draw_types
+    if use_draw_types:
+        for i, poly in enumerate(blender_mesh.polygons):
+            # The last bit (bit 0) of face_draw_types determines shading: 0 = smooth, 1 = flat
+            poly.use_smooth = (use_draw_types[i] & 1) == 0
+    else:
+        for i, poly in enumerate(blender_mesh.polygons):
+            poly.use_smooth = True  # Default to all smooth shading if no draw types are provided.
 
     # Link the object to the scene collection
     scene = bpy.context.scene
@@ -125,10 +73,14 @@ def create_blender_mesh(rs_mesh, filepath):
     bpy.ops.object.mode_set(mode='OBJECT')
     obj.select_set(True)
 
-    # If face priorities exist, create a custom integer attribute for them.
-    #I don't believe the importer actually pulls priorities yet.
-    # In newer versions of Blender, you can assign custom attributes to things like faces and vertices. You can take advantage of this to store the face priorities.
- 
+
+    if rs_mesh.vertex_labels: #VSKIN, vertex labels
+        VSKIN_values = np.zeros(rs_mesh.vertex_count, dtype=np.int8)
+        for i in range(rs_mesh.vertex_count):
+            VSKIN_values[i] = rs_mesh.vertex_labels[i]
+        VSKIN = blender_mesh.attributes.new(name='VSKIN', type='INT', domain='POINT')
+        VSKIN.data.foreach_set("value", VSKIN_values)
+        
     if rs_mesh.face_priorities: #PRI; currently bugged with PRI: 10 showing up as nothing.
         PRI_values = np.zeros(rs_mesh.face_count, dtype=np.int8)
         for i in range(rs_mesh.face_count):
@@ -152,98 +104,164 @@ def create_blender_mesh(rs_mesh, filepath):
 
     return obj
 
+def create_or_get_material(rs_mesh, blender_mesh):
+    if rs_mesh.face_indices_a and rs_mesh.face_indices_b and rs_mesh.face_indices_c: #sanity check
+        
+        mesh = blender_mesh
 
-# def create_skeletal_groups(obj, mesh):
-#     for vertex_index in range(mesh.vertex_count):
-#         bone_ids = mesh.skeletal_bones[vertex_index]
-#         weights = mesh.skeletal_weights[vertex_index]
+        combo_cache = []    #for all Blender materials, regardless of type.
 
-#         for i in range(len(bone_ids)):
-#             bone_id = bone_ids[i]
-#             weight = weights[i]
-#             vertex_group_name = f"Bone_{bone_id}"
-#             vertex_group = obj.vertex_groups.get(vertex_group_name)
-#             if not vertex_group:
-#                 vertex_group = obj.vertex_groups.new(name=vertex_group_name)
-#             vertex_group.add([vertex_index], weight / 255, 'ADD')
+        hsl_cache = []  
+        rgba_cache = []    # paired because one HSL corresponds to one RGBA
 
+        for face in range(rs_mesh.face_count):
+            face_color = rs_mesh.face_colors[face]
+            if face_color not in hsl_cache:
+                H = (face_color >> 10) & 0x3F
+                S = (face_color >> 7) & 0x07
+                L = face_color & 0x7F
+                r, g, b = colorsys.hls_to_rgb(H / 63.0, L / 127.0, S / 7.0)
+                rgba = (round(r, 6), round(g, 6), round(b, 6), 1.0)
+                print("import_model.py: Creating new color:", (H, S, L), "->", rgba)
+                hsl_cache.append(face_color)  # just to track which HSL we've seen
+                rgba_cache.append(rgba) # corresponding RGBA value
+            else:
+                rgba = rgba_cache[hsl_cache.index(face_color)]
 
-# def get_hsl_from_coord(u, v):
-#     width = 128
-#     height = 512
+            # Detect textured faces
+            has_texture = bool(rs_mesh.face_draw_types) and (rs_mesh.face_draw_types[face] >> 1) & 1
 
-#     # Convert u and v to pixel coordinates
-#     pixel_x = int(u * width)
-#     pixel_y = int(v * height)
+            if has_texture:
+                texture_id = rs_mesh.face_colors[face]
 
-#     # Calculate the index from pixel coordinates
-#     index = pixel_y * width + pixel_x
-#     return index
+                # texture_id = 37 #temp override for testing
+                key = (texture_id, face_color)
 
+                if key not in combo_cache:
+                    # Create a combined material that multiplies texture by the face color
+                    # mat_name = f"T{texture_id}_H{H}_S{S}_L{L}"
+                    mat_name = f"T{texture_id}"
+                    mat = bpy.data.materials.new(mat_name)
+                    mat.use_nodes = True
+                    nodes = mat.node_tree.nodes
+                    links = mat.node_tree.links
+                    nodes.clear()
 
-def get_uv_coordinates(index):
-    u = (index % 128) / 128
-    v = 1.0 - (index / 128) / 512
+                    output_node = nodes.new(type='ShaderNodeOutputMaterial')
+                    bsdf_node = nodes.new(type='ShaderNodeBsdfPrincipled')
+                    tex_node = nodes.new(type='ShaderNodeTexImage')
 
-    return u, v
+                    # load image if available (reuse existing image if loaded)
+                    texture_path = os.path.join(os.path.dirname(__file__), "textures", f"{texture_id}.png")
+                    if os.path.exists(texture_path):
+                        tex_node.image = bpy.data.images.load(filepath=texture_path, check_existing=True)
+
+                    mat.use_backface_culling = True
+                    mat.blend_method = 'CLIP'
+
+                    mesh.materials.append(mat)
+                    combo_cache.append(key)
+
+                mat_index = combo_cache.index(key)
+                mesh.polygons[face].material_index = mat_index
+                # Ensure UV layer exists
+                if not mesh.uv_layers:
+                    mesh.uv_layers.new(name="UVMap")
+                uv_layer = mesh.uv_layers.active.data
+
+                # Get UVs from p, m, n coordinates
+                uvs = get_uv_from_pmn(rs_mesh, face)
+                poly = mesh.polygons[face]
+                for loop_idx, (u, v) in zip(poly.loop_indices, zip(uvs[0], uvs[1])):
+                    uv_layer[loop_idx].uv = (u, v)
+
+                #print(f"Face {face} PMN coords:", rs_mesh.texture_coords_p[rs_mesh.texture_coord_indices[face]],rs_mesh.texture_coords_m[rs_mesh.texture_coord_indices[face]],rs_mesh.texture_coords_n[rs_mesh.texture_coord_indices[face]])
+
+            else:
+                key = (-1, face_color)
+                if key not in combo_cache:
+                    mat_name = f"H{H}_S{S}_L{L}"
+                    mat = bpy.data.materials.new(mat_name)
+                    mat.diffuse_color = rgba
+                    # keep nodes enabled for consistency with above.
+                    mat.use_nodes = True
+                    # Optionally create a simple node setup for solid color:
+                    nodes = mat.node_tree.nodes
+                    links = mat.node_tree.links
+                    nodes.clear()
+                    output_node = nodes.new(type='ShaderNodeOutputMaterial')
+                    bsdf_node = nodes.new(type='ShaderNodeBsdfPrincipled')
+                    rgb_node = nodes.new(type='ShaderNodeRGB')
+                    rgb_node.outputs[0].default_value = rgba
+                    links.new(rgb_node.outputs['Color'], bsdf_node.inputs['Base Color'])
+                    links.new(bsdf_node.outputs['BSDF'], output_node.inputs['Surface'])
+
+                    mat.use_backface_culling = True
+                    mat.blend_method = 'CLIP'
+
+                    mesh.materials.append(mat)
+                    combo_cache.append(key)
+
+                mat_index = combo_cache.index(key)
+                mesh.polygons[face].material_index = mat_index
 
 
 def get_uv_from_pmn(rs_mesh, i):
-    def cross_product(p1, p2):
-        return np.cross(p1, p2)
-
-    def dot_product(p1, p2):
-        return np.dot(p1, p2)
-
+    # Get the indices for the texture coordinates
     coordinate = rs_mesh.texture_coord_indices[i]
     faceA = rs_mesh.face_indices_a[i]
     faceB = rs_mesh.face_indices_b[i]
     faceC = rs_mesh.face_indices_c[i]
 
+    # Get the 3D coordinates for the triangle vertices
     a = np.array([rs_mesh.vertices_x[faceA], rs_mesh.vertices_y[faceA], rs_mesh.vertices_z[faceA]])
     b = np.array([rs_mesh.vertices_x[faceB], rs_mesh.vertices_y[faceB], rs_mesh.vertices_z[faceB]])
     c = np.array([rs_mesh.vertices_x[faceC], rs_mesh.vertices_y[faceC], rs_mesh.vertices_z[faceC]])
 
+    # Get the PMN coordinates
     p = np.array([rs_mesh.vertices_x[rs_mesh.texture_coords_p[coordinate]],
-                  rs_mesh.vertices_y[rs_mesh.texture_coords_p[coordinate]],
-                  rs_mesh.vertices_z[rs_mesh.texture_coords_p[coordinate]]])
+                rs_mesh.vertices_y[rs_mesh.texture_coords_p[coordinate]],
+                rs_mesh.vertices_z[rs_mesh.texture_coords_p[coordinate]]])
     m = np.array([rs_mesh.vertices_x[rs_mesh.texture_coords_m[coordinate]],
-                  rs_mesh.vertices_y[rs_mesh.texture_coords_m[coordinate]],
-                  rs_mesh.vertices_z[rs_mesh.texture_coords_m[coordinate]]])
+                rs_mesh.vertices_y[rs_mesh.texture_coords_m[coordinate]],
+                rs_mesh.vertices_z[rs_mesh.texture_coords_m[coordinate]]])
     n = np.array([rs_mesh.vertices_x[rs_mesh.texture_coords_n[coordinate]],
-                  rs_mesh.vertices_y[rs_mesh.texture_coords_n[coordinate]],
-                  rs_mesh.vertices_z[rs_mesh.texture_coords_n[coordinate]]])
+                rs_mesh.vertices_y[rs_mesh.texture_coords_n[coordinate]],
+                rs_mesh.vertices_z[rs_mesh.texture_coords_n[coordinate]]])
 
-    pM = m - p
-    pN = n - p
+    f1 = m - p
+    f2 = n - p
+
+    f1DotF1 = np.dot(f1, f1)
+    f1DotF2 = np.dot(f1, f2)
+    f2DotF2 = np.dot(f2, f2)
+
+    det = f1DotF1 * f2DotF2 - f1DotF2 * f1DotF2
+    if det == 0:
+        raise ValueError("PMN triangle is degenerate (determinant is zero).")
+    else:
+        invDet = 1.0 / det
+
+    # Inverse of the Gram matrix
+    inverse = np.array([
+        [f2DotF2 * invDet, -f1DotF2 * invDet],
+        [-f1DotF2 * invDet, f1DotF1 * invDet]
+    ])
+
     pA = a - p
     pB = b - p
     pC = c - p
 
-    pMxPn = cross_product(pM, pN)
+    projectionA = np.array([np.dot(f1, pA), np.dot(f2, pA)])
+    projectionB = np.array([np.dot(f1, pB), np.dot(f2, pB)])
+    projectionC = np.array([np.dot(f1, pC), np.dot(f2, pC)])
 
-    uCoordinate = cross_product(pN, pMxPn)
-    mU = 1.0 / dot_product(uCoordinate, pM)
+    uv0 = inverse @ projectionA
+    uv1 = inverse @ projectionB
+    uv2 = inverse @ projectionC
 
-    uA = dot_product(uCoordinate, pA) * mU
-    uB = dot_product(uCoordinate, pB) * mU
-    uC = dot_product(uCoordinate, pC) * mU
-
-    vCoordinate = cross_product(pM, pMxPn)
-    mV = 1.0 / dot_product(vCoordinate, pN)
-    vA = dot_product(vCoordinate, pA) * mV
-    vB = dot_product(vCoordinate, pB) * mV
-    vC = dot_product(vCoordinate, pC) * mV
-
-    u = np.array([float(uA), float(uB), float(uC)])
-    v = np.array([float(vA), float(vB), float(vC)])
-    return u, v
-
-
-def load(self):
-    mesh = read_mesh(self.filepath)
-    create_blender_mesh(mesh, self.filepath)
-    return {"FINISHED"}
+    # Return as two lists: ([u0, u1, u2], [v0, v1, v2])
+    return [float(uv0[0]), float(uv1[0]), float(uv2[0])], [float(uv0[1]), float(uv1[1]), float(uv2[1])]
 
 def validate_and_filter_faces(rs_mesh, vertices, faces):
     vc = rs_mesh.vertex_count

@@ -75,21 +75,19 @@ class ByteBuffer:
 
 
     def put_byte(self, value):
-        packed = value.to_bytes(1, 'big', signed=True)
-        self.put_bytes(packed, 0, 1)
-
+        v = int(value) & 0xFF
+        self.put_bytes(bytes((v,)), 0, 1)
 
     def put_short(self, value):
-        value &= 0xFFFF
-        packed = value.to_bytes(2, 'big', signed=True)
-        self.put_bytes(packed, 0, 2)
-
+        v = int(value) & 0xFFFF
+        self.put_bytes(struct.pack('>H', v), 0, 2)
 
     def put_signed_smart(self, value):
-        if -64 <= value < 64:
-            self.put_byte(value + 64)
-        elif -32768 <= value < 32768:
-            self.put_short(value + 0xC000)
+        iv = int(value)
+        if -64 <= iv <= 63:
+            self.put_byte(iv + 0x40)          # 1-byte path: 0..127
+        elif -16384 <= iv <= 16383:
+            self.put_short(iv + 0xC000)       # 2-byte path: unsigned short
         else:
             raise ValueError("Value out of range for signed smart")
 
