@@ -4,7 +4,7 @@ import os
 bl_info = {
     "name":         "ob2blender",
     "author":       "stone-temple-pilot",
-    "blender": (3, 4, 1),
+    "blender": (4, 5, 2),
     "version": (1, 0, 0),
     "location":     "File > Import-Export",
     "description":  "Import and Export Runescape 3D model format (.ob2)",
@@ -75,4 +75,5 @@ def unregister():
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
 if __name__ == "__main__":
+
     register()
