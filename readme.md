@@ -5,7 +5,9 @@ Built on Blender 4.5.
 This project is in alpha. Not all features are fully implemented yet, see 'Known Issues' below.
 
 Optimized for use with Lost City: https://github.com/LostCityRS/Server
+ 
 This add-on is based off of RuneBlend by Tamatea: https://github.com/tamateea/RuneBlend
+ 
 It is also tailored for use alongside AmVoidGuy's Lost City Model and Anim Editor: https://github.com/AmVoidGuy/LostCityModelAndAnimEditor
 
 ## Installation Instructions
@@ -57,4 +59,5 @@ Assuming no errors, your model should work in-game when implemented!
 
 *This plugin is developed independently and is not affiliated with Jagex or Runescape in any way.*
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.
+
 *Special thanks to Tamateea for providing the basis of this project.
