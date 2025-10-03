@@ -25,6 +25,7 @@ Assuming no errors, your model should work in-game when implemented!
 
 ## Features
 * Batch exporting - edit and export multiple models at a time. One file per highlighted object, filename is object name. **Beware of overwriting files in your directory.**
+* Supports double-sided faces. Make sure to tick on Backface Culling to view them properly.
 * Priority, face labels, vertex labels, and alpha are all assigned as attributes; see below.
 * Smooth- and flat-shading support.
 * Material colors rely on diffuse_color, i.e. viewport display color. Set all material colors there.
@@ -59,4 +60,5 @@ Assuming no errors, your model should work in-game when implemented!
 *This plugin is developed independently and is not affiliated with Jagex or RuneScape in any way.*
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
