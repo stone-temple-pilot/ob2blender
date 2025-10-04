@@ -10,6 +10,8 @@ This add-on is based off of RuneBlend by Tamatea: https://github.com/tamateea/Ru
  
 It is also tailored for use alongside AmVoidGuy's Lost City Model and Anim Editor: https://github.com/AmVoidGuy/LostCityModelAndAnimEditor
 
+Companion thread on Lost City forums: https://lostcity.rs/t/ob2blender-lost-city-model-addon-for-blender/10972
+
 ## Installation Instructions
 1. **Installation:** Download the plugin and install it in Blender following the standard plugin installation process.
    * **You may need to rename the folder manually, i.e. ob2blender-main to ob2blender.**
@@ -52,10 +54,10 @@ Assuming no errors, your model should work in-game when implemented!
 
 ## Known Issues
 * Textures not yet implemented. Exporting a textured object will yield an error.
-* Chathead exporting does not yet work due to 'pop an empty set' error.
+* Chathead exporting does not yet work due to 'pop from empty set' error.
 * RGB15 conversion converts color but can show up as 'undefined' in Lost City Model and Anim Editor color picker tool. Likely due to rounding error.
 * Checking attribute values kind of sucks. Looking for a better solution.
-* Useless error saying something about NoneType appears.
+* Useless error saying something about NoneType appears. Models are still exported just fine.
 
 ---
 
@@ -64,6 +66,7 @@ Assuming no errors, your model should work in-game when implemented!
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
