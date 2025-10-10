@@ -1,3 +1,5 @@
+<img width="969" height="524" alt="image" src="https://github.com/user-attachments/assets/f26a9666-e021-4a4f-b4f3-19db8c7dc47f" />
+
 ## Description
 This add-on allows you to import, edit and export old format RuneScape models (.ob2 and .dat) all within Blender!
 Built on Blender 4.5.
@@ -66,6 +68,7 @@ Assuming no errors, your model should work in-game when implemented!
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
