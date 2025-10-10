@@ -221,7 +221,8 @@ def encode_vertices(blender_mesh):
     #first vertex gets all deltas
     vertex = blender_mesh.vertices[0]
     last_x, last_y, last_z = round(vertex.co.x), round(vertex.co.y), round(vertex.co.z)
-    print(f"First vertex coordinates: ({last_x}, {last_y}, {last_z}), converted from ({vertex.co.x}, {vertex.co.y}, {vertex.co.z})")
+
+    #print(f"First vertex coordinates: ({last_x}, {last_y}, {last_z}), converted from ({vertex.co.x}, {vertex.co.y}, {vertex.co.z})")
     vertex_count += 1
     vertex_flags.append(7)  # all deltas present
     delta_x.append(last_x)
@@ -293,7 +294,7 @@ def encode_face_indices(blender_mesh):
             s = {ta, tb, tc}
             face_count += 1
             # try to share two verts with previous (a,b,c)
-            if {a, c}.issubset(s):
+            if {a, c}.issubset(s) and len(s - {a, c}) == 1:
                 # opcode 2: b = c, c = new (the remaining vertex not in {a,c})
                 face_opcodes.append(2)
                 new_c = (s - {a, c}).pop()
@@ -301,14 +302,14 @@ def encode_face_indices(blender_mesh):
                 b = c
                 c = new_c
                 push_delta(c)
-            elif {b, c}.issubset(s):
+            elif {b, c}.issubset(s) and len(s - {b, c}) == 1:
                 # opcode 3: a = c, c = new
                 face_opcodes.append(3)
                 new_c = (s - {b, c}).pop()
                 a = c
                 c = new_c
                 push_delta(c)
-            elif {a, b}.issubset(s):
+            elif {a, b}.issubset(s) and len(s - {a, b}) == 1:
                 # opcode 4: swap a,b, then c = new
                 face_opcodes.append(4)
                 new_c = (s - {a, b}).pop()
@@ -335,12 +336,13 @@ def encode_face_colors_and_textures(blender_mesh):
     for face in blender_mesh.polygons:
         if int(face.material_index) not in mat_export_cache:
             #if the material has a texture:
-            if isFaceMaterialTextured(face):
+            if isFaceMaterialTextured(face) and bpy.data.materials[face.material_index].name.startswith("T"):
                 #get the texture id from the material name or some other property.
                 try:
-                    texture_id = int(bpy.data.materials[face.material_index].name.split('T')[-1])  # Example: material named "T50" gives texture ID 50
+                    mat_name = bpy.data.materials[face.material_index].name
+                    texture_id = int(mat_name.split('T')[-1])  # Example: material named "T50" gives texture ID 50
                 except ValueError:
-                    raise ValueError(f"Material name '{bpy.data.materials[face.material_index].name}' cannot be converted to an integer texture ID for face {face.index}")
+                    raise ValueError(f"Material name '{mat_name}' cannot be converted to an integer texture ID for face {face.index}")
                 mat_export_cache.append(int(face.material_index))
                 mat_code_equivalent.append(texture_id)
                 textured_face_count += 1
@@ -357,7 +359,7 @@ def encode_face_colors_and_textures(blender_mesh):
                         r = ((rgb_value >> 10) & 0x1F) / 31.0
                         g = ((rgb_value >> 5) & 0x1F) / 31.0
                         b = (rgb_value & 0x1F) / 31.0
-                        print(f"Converting RGB15 {rgb_value} to HSL for material index {face.material_index}: R={r}, G={g}, B={b}")
+                        #print(f"Converting RGB15 {rgb_value} to HSL for material index {face.material_index}: R={r}, G={g}, B={b}")
                         (H, L, S) = colorsys.rgb_to_hls(r, g, b)
                     except ValueError as e:
                         print(f"Error processing material name '{blender_mesh.materials[face.material_index].name}' for face {face.index}: {e}")
@@ -371,8 +373,8 @@ def encode_face_colors_and_textures(blender_mesh):
                 mat_code_equivalent.append(color)
                 print("Appended color:", color, "for material index", face.material_index)
         #print(f"Face {face.index} material index: {face.material_index}, color: {mat_code_equivalent[mat_export_cache.index(face.material_index)]}")
-        color = mat_code_equivalent[mat_export_cache.index(face.material_index)]
-        face_colors.append(color)
+        face_color = mat_code_equivalent[mat_export_cache.index(face.material_index)]
+        face_colors.append(face_color)
     # print(f"mat_export_cache: {mat_export_cache}, mat_code_equivalent: {mat_code_equivalent}")
     return face_colors, textured_face_count
 
@@ -397,11 +399,23 @@ def encode_face_draw_types(blender_mesh):
         tuple_library = [] #list of unique PMN tuples that are sometimes shared between faces.
         #the integer index of tuple_library will be used for face_draw_types.
         for face in textured_face_holder: #face here is the index of the face in blender_mesh.polygons
-            uvs = [loop[face.loop_indices] for loop in blender_mesh.uv_layers.active.data]
-            PMNtuple = uv_to_pmn(uvs[0], uvs[1], blender_mesh, face)
-            if PMNtuple not in tuple_library:
+            # Get the polygon (face) object
+            poly = blender_mesh.polygons[face]
+            # Get the loop indices for the face's vertices
+            loop_indices = poly.loop_indices
+            # Extract UVs for each vertex of the face
+            uvs = [blender_mesh.uv_layers.active.data[i].uv for i in loop_indices]
+            # Prepare UVs as tuples for PMN calculation
+            u = [uv[0] for uv in uvs]
+            v = [uv[1] for uv in uvs]
+            PMNtuple = uv_to_pmn(u, v, blender_mesh, face)
+            if not any((np.array(PMNtuple) == np.array(t)).all() for t in tuple_library):
                 tuple_library.append(PMNtuple)
-            face_draw_types[face] |= (tuple_library.index(PMNtuple) << 2)  # Store PMN index in higher 6 bits
+            # Find the exact matching tuple (order and values) and append its index
+            for idx, t in enumerate(tuple_library):
+                if len(PMNtuple) == 3 and len(t) == 3 and all(np.array_equal(PMNtuple[i], t[i]) for i in range(3)):
+                    face_draw_types[face] |= (idx << 2)  # Store PMN index in higher 6 bits
+                    break
 
         texture_coords_p = []  # p
         texture_coords_m = []  # m
@@ -467,23 +481,25 @@ def encode_face_pris_alphas_labels(blender_mesh, face_count):
 # Example usage:
 # export_selected_objects("C:/Users/mallo/Desktop/ob2blender/exports", export_as_one=True)
 def isFaceMaterialTextured(face):
-    material = bpy.data.materials[face.material_index]
-    if material and material.use_nodes:
-        for node in material.node_tree.nodes:
-            if node.type == 'TEX_IMAGE':
-                return True
+    # Ensure the material index is valid for the mesh
+    materials = getattr(face.id_data, "materials", bpy.data.materials)
+    if face.material_index < len(materials):
+        material = materials[face.material_index]
+        if material and material.use_nodes:
+            for node in material.node_tree.nodes:
+                if node.type == 'TEX_IMAGE' and getattr(node, "image", None) is not None:
+                    print(f"Face {face.index} uses textured material '{material.name}'")
+                    return True
     return False
-
 
 def uv_to_pmn(u, v, blender_mesh, face):
 
-    ia = blender_mesh.face_indices_a[face]
-    ib = blender_mesh.face_indices_b[face]
-    ic = blender_mesh.face_indices_c[face]
+    poly = blender_mesh.polygons[face]
+    ia, ib, ic = poly.vertices[:3]
 
-    A = np.array([blender_mesh.vertices_x[ia], blender_mesh.vertices_y[ia], blender_mesh.vertices_z[ia]], dtype=float)
-    B = np.array([blender_mesh.vertices_x[ib], blender_mesh.vertices_y[ib], blender_mesh.vertices_z[ib]], dtype=float)
-    C = np.array([blender_mesh.vertices_x[ic], blender_mesh.vertices_y[ic], blender_mesh.vertices_z[ic]], dtype=float)
+    A = np.array(blender_mesh.vertices[ia].co, dtype=float)
+    B = np.array(blender_mesh.vertices[ib].co, dtype=float)
+    C = np.array(blender_mesh.vertices[ic].co, dtype=float)
 
     uA, uB, uC = map(float,u)
     vA, vB, vC = map(float,v)
