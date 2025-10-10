@@ -53,8 +53,8 @@ Assuming no errors, your model should work in-game when implemented!
 * You can also use Spreadsheet view, though it goes by face/vertex ID and is not very user-friendly.
 
 ## Known Issues
-* Textures not yet implemented. Exporting a textured object will yield an error.
-* Chathead exporting does not yet work due to 'pop from empty set' error.
+* Models are mirrored horizontally compared to how they are imported in Lost City Model and Anim Editor. Please bear this in mind when making things like arm and leg models.
+* Textures not yet properly implemented. Exporting a textured object will not assign a texture.
 * RGB15 conversion converts color but can show up as 'undefined' in Lost City Model and Anim Editor color picker tool. Likely due to rounding error.
 * Checking attribute values kind of sucks. Looking for a better solution.
 * Useless error saying something about NoneType appears. Models are still exported just fine.
@@ -66,6 +66,7 @@ Assuming no errors, your model should work in-game when implemented!
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
