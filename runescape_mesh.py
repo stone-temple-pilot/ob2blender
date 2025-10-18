@@ -14,6 +14,7 @@ class RunescapeMesh: #todo: recreate this for all parameters in 244-type models 
         self.vertices_x = []
         self.vertices_y = []
         self.vertices_z = []
+
         self.face_count = 0
         self.face_indices_a = []  # indices
         self.face_indices_b = []
@@ -25,14 +26,14 @@ class RunescapeMesh: #todo: recreate this for all parameters in 244-type models 
         self.model_priority = 0
         self.vertex_labels = []  #VSKIN
         self.face_labels = []  #TSKIN
+
         self.textured_face_count = 0
+        self.texture_coord_indices = []
         self.texture_coords_p = []  # p
         self.texture_coords_m = []  # m
         self.texture_coords_n = []  # n
         self.texture_types = []
-        self.grouped_vertices = []
-        self.grouped_faces = []
-        self.bone_groups = None
+        self.texture_ids = []
 
     @staticmethod
     # Leaving this here because I like it
@@ -68,6 +69,9 @@ class RunescapeMesh: #todo: recreate this for all parameters in 244-type models 
 
         hasInfo = buffer_indices.read_unsigned_byte() #for shading
         priority = buffer_indices.read_unsigned_byte()
+        print(f"runescape_mesh.py: priority value read: {priority}")
+        #So I had it all wrong. A Priority of 255 means per-face priorities exist.
+        # Any other value means a model-wide priority.
         hasAlpha = buffer_indices.read_unsigned_byte()
         hasFaceLabels = buffer_indices.read_unsigned_byte() #has TSKIN
         hasVertexLabels = buffer_indices.read_unsigned_byte() 
@@ -271,122 +275,33 @@ class RunescapeMesh: #todo: recreate this for all parameters in 244-type models 
         if self.textured_face_count == 0:
             return
 
-        if self.texture_coord_indices is None:
-            self.texture_coord_indices = [0] * self.face_count
+        # Ensure per-face arrays are sized to face_count
+        if self.texture_coord_indices is None or len(self.texture_coord_indices) != self.face_count:
+            self.texture_coord_indices = [-1] * self.face_count
+        if self.texture_ids is None or len(self.texture_ids) != self.face_count:
+            self.texture_ids = [-1] * self.face_count
 
-        if self.texture_ids is None:
-            self.texture_ids = [0] * self.face_count
-
-        for i in range(self.face_count): #this finds if faces have texture.
-            if self.face_draw_types is not None and self.face_draw_types[i] >= 2:
-                texture_index = self.face_draw_types[i] >> 2
+        for i in range(self.face_count):
+            draw = self.face_draw_types[i]
+            is_textured = (draw & 0b10) != 0
+            if is_textured:
+                # Bits 2..7 carry the PMN/texture index in this format
+                texture_index = (draw >> 2) & 0x3F
                 self.texture_coord_indices[i] = texture_index
                 self.texture_ids[i] = self.face_colors[i]
-                # print(f"convert_textures: Face {i} has texture index {texture_index} and texture id {self.face_colors[i]}")
-                # print(f"Texture index {texture_index} has texture coords P: {self.texture_coords_p[texture_index]}, M: {self.texture_coords_m[texture_index]}, N: {self.texture_coords_n[texture_index]}")
+
+                # Guard against bad indices
+                if 0 <= texture_index < self.textured_face_count:
+                    # Safe to read P/M/N for debug/logging
+                    p = self.texture_coords_p[texture_index]
+                    m = self.texture_coords_m[texture_index]
+                    n = self.texture_coords_n[texture_index]
+                    # print(f"Face {i}: tex_idx={texture_index} P,M,N=({p},{m},{n})")
+                else:
+                    # Invalid index: mark face as untextured to avoid OOB access
+                    # print(f"Face {i}: tex_idx {texture_index} out of range (0..{self.textured_face_count-1})")
+                    self.texture_coord_indices[i] = -1
+                    self.texture_ids[i] = -1
             else:
                 self.texture_coord_indices[i] = -1
                 self.texture_ids[i] = -1
-
-    # def decode_faces(self, buffer_face_indices, buffer_flag, buffer_uv):
-    #     a = 0
-    #     b = 0
-    #     c = 0
-    #     last = 0
-
-    #     for face in range(self.face_count):
-    #         flag = buffer_flag.read_unsigned_byte()
-    #         orientation = flag & 0x7
-    #         if orientation == 1:
-    #             self.face_indices_a[face] = a = buffer_face_indices.readSignedSmart() + last
-    #             self.face_indices_b[face] = b = buffer_face_indices.readSignedSmart() + a
-    #             self.face_indices_c[face] = c = buffer_face_indices.readSignedSmart() + b
-    #             last = c
-    #             if a > self.highest_vertex:
-    #                 self.highest_vertex = a
-    #             if b > self.highest_vertex:
-    #                 self.highest_vertex = b
-    #             if c > self.highest_vertex:
-    #                 self.highest_vertex = c
-    #         if orientation == 2:
-    #             b = c
-    #             c = buffer_face_indices.readSignedSmart() + last
-    #             last = c
-    #             self.face_indices_a[face] = a
-    #             self.face_indices_b[face] = b
-    #             self.face_indices_c[face] = c
-    #             if c > self.highest_vertex:
-    #                 self.highest_vertex = c
-    #         if orientation == 3:
-    #             a = c
-    #             c = buffer_face_indices.readSignedSmart() + last
-    #             last = c
-    #             self.face_indices_a[face] = a
-    #             self.face_indices_b[face] = b
-    #             self.face_indices_c[face] = c
-    #             if c > self.highest_vertex:
-    #                 self.highest_vertex = c
-    #         if orientation == 4:
-    #             tmp = a
-    #             a = b
-    #             b = tmp
-    #             c = buffer_face_indices.readSignedSmart() + last
-    #             last = c
-    #             self.face_indices_a[face] = a
-    #             self.face_indices_b[face] = tmp
-    #             self.face_indices_c[face] = c
-    #             if c > self.highest_vertex:
-    #                 self.highest_vertex = c
-    #         if self.uv_coords_count > 0 and (flag & 0x8) != 0:
-    #             self.uv_face_indices_a[face] = buffer_uv.read_unsigned_byte()
-    #             self.uv_face_indices_b[face] = buffer_uv.read_unsigned_byte()
-    #             self.uv_face_indices_c[face] = buffer_uv.read_unsigned_byte()
-
-    #     self.highest_vertex += 1
-
-    # def decode_mapping(self, buffer_pmn, buffer_scaled_pmn, buffer_texture_scale, buffer_texture_rotation,
-    #                    buffer_texture_direction, buffer_texture_speed):
-    #     for textured_face in range(self.textured_face_count):
-    #         mapping = self.texture_types[textured_face] & 0xFF
-    #         if mapping == 0:
-    #             self.texture_coords_p[textured_face] = buffer_pmn.read_unsigned_short()
-    #             self.texture_coords_m[textured_face] = buffer_pmn.read_unsigned_short()
-    #             self.texture_coords_n[textured_face] = buffer_pmn.read_unsigned_short()
-    #         if mapping == 1:
-    #             self.texture_coords_p[textured_face] = buffer_scaled_pmn.read_unsigned_short()
-    #             self.texture_coords_m[textured_face] = buffer_scaled_pmn.read_unsigned_short()
-    #             self.texture_coords_n[textured_face] = buffer_scaled_pmn.read_unsigned_short()
-    #             if self.model_version < 15:
-    #                 self.texture_scale_x[textured_face] = buffer_texture_scale.read_unsigned_short()
-    #                 if self.model_version < 14:
-    #                     self.texture_scale_y[textured_face] = buffer_texture_scale.read_unsigned_short()
-    #                 else:
-    #                     self.texture_scale_y[textured_face] = buffer_texture_scale.read24_bit_int()
-    #                 self.texture_scale_z[textured_face] = buffer_texture_scale.read_unsigned_short()
-    #             else:
-    #                 self.texture_scale_x[textured_face] = buffer_texture_scale.read24_bit_int()
-    #                 self.texture_scale_y[textured_face] = buffer_texture_scale.read24_bit_int()
-    #                 self.texture_scale_z[textured_face] = buffer_texture_scale.read24_bit_int()
-    #             self.texture_rotation[textured_face] = buffer_texture_rotation.read_signed_byte()
-    #             self.texture_direction[textured_face] = buffer_texture_direction.read_signed_byte()
-    #             self.texture_speed[textured_face] = buffer_texture_speed.read_signed_byte()
-    #         if mapping == 2:
-    #             self.texture_coords_p[textured_face] = buffer_scaled_pmn.read_unsigned_short()
-    #             self.texture_coords_m[textured_face] = buffer_scaled_pmn.read_unsigned_short()
-    #             self.texture_coords_n[textured_face] = buffer_scaled_pmn.read_unsigned_short()
-    #             if self.model_version < 15:
-    #                 self.texture_scale_x[textured_face] = buffer_texture_scale.read_unsigned_short()
-    #                 if self.model_version < 14:
-    #                     self.texture_scale_y[textured_face] = buffer_texture_scale.read_unsigned_short()
-    #                 else:
-    #                     self.texture_scale_y[textured_face] = buffer_texture_scale.read24_bit_int()
-    #                 self.texture_scale_z[textured_face] = buffer_texture_scale.read_unsigned_short()
-    #             else:
-    #                 self.texture_scale_x[textured_face] = buffer_texture_scale.read24_bit_int()
-    #                 self.texture_scale_y[textured_face] = buffer_texture_scale.read24_bit_int()
-    #                 self.texture_scale_z[textured_face] = buffer_texture_scale.read24_bit_int()
-    #             self.texture_rotation[textured_face] = buffer_texture_rotation.read_signed_byte()
-    #             self.texture_direction[textured_face] = buffer_texture_direction.read_signed_byte()
-    #             self.texture_speed[textured_face] = buffer_texture_speed.read_signed_byte()
-    #             self.texture_u_trans[textured_face] = buffer_texture_speed.read_signed_byte()
-    #             self.texture_v_trans[textured_face] = buffer_texture_speed.read_signed_byte()

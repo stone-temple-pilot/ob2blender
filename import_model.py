@@ -81,12 +81,15 @@ def create_blender_mesh(rs_mesh, filepath):
         VSKIN = blender_mesh.attributes.new(name='VSKIN', type='INT', domain='POINT')
         VSKIN.data.foreach_set("value", VSKIN_values)
         
-    if rs_mesh.face_priorities: #PRI; currently bugged with PRI: 10 showing up as nothing.
-        PRI_values = np.zeros(rs_mesh.face_count, dtype=np.int8)
+    PRI_values = np.zeros(rs_mesh.face_count, dtype=np.int8)
+    if rs_mesh.face_priorities: #per-face priorities
         for i in range(rs_mesh.face_count):
             PRI_values[i] = rs_mesh.face_priorities[i]
-        PRI = blender_mesh.attributes.new(name='PRI', type='INT', domain='FACE')
-        PRI.data.foreach_set("value", PRI_values)
+    else: #model-wide priority
+        for i in range(rs_mesh.face_count):
+            PRI_values[i] = rs_mesh.model_priority #e.g. if model priority is 2, all faces get 2
+    PRI = blender_mesh.attributes.new(name='PRI', type='INT', domain='FACE')
+    PRI.data.foreach_set("value", PRI_values)
 
     if rs_mesh.face_labels: #TSKIN, face labels
         TSKIN_values = np.zeros(rs_mesh.face_count, dtype=np.int8)

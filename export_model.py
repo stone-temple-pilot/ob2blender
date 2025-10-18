@@ -85,7 +85,7 @@ def assemble_ob2(blender_mesh):
         #define flags first so we know what we have.
         has_vertex_labels = False
         has_face_labels = False
-        has_priority = 0 #255 if true (11111111), 0 if false (00000000)
+        has_priority = 0 #255 if true (11111111), some other number is false, AKA model_wide priority.
         has_alpha = False
         has_face_info = False
         #gather vertices
@@ -451,16 +451,26 @@ def encode_face_pris_alphas_labels(blender_mesh, face_count):
     face_priorities = [] #PRI
     face_alphas = []
     face_labels = []  #TSKIN
-    has_priority = 0 #255 if true (11111111), 0 if false (00000000)
+    has_priority = 0 #255 if true (11111111), some other number if false, AKA model_wide priority.
     has_alpha = False
     has_face_labels = False
 
     #check if any face has a priority set (custom property 'PRI')
     if PRIs := blender_mesh.attributes.get('PRI'):
-        has_priority = 255
         PRIs_data = np.zeros(face_count, dtype=int)
         PRIs.data.foreach_get('value', PRIs_data)
-        face_priorities.extend(int(v) & 0xFF for v in PRIs_data)
+        unique_vals = np.unique(PRIs_data)
+        if unique_vals.size == 1:
+            # all faces share the same model-wide priority -> store that value in has_priority
+            # face_priorities can remain empty
+            has_priority = int(unique_vals[0]) & 0xFF
+        else:
+            # heterogeneous per-face priorities -> signal per-face priorities with 255 and store them
+            has_priority = 255
+            face_priorities.extend(int(v) & 0xFF for v in PRIs_data)
+        # PRIs_data = np.zeros(face_count, dtype=int)
+        # PRIs.data.foreach_get('value', PRIs_data)
+        # face_priorities.extend(int(v) & 0xFF for v in PRIs_data)
 
     #check if any face has a custom property 'ALPHA'
     if ALPHAs := blender_mesh.attributes.get('ALPHA'):
