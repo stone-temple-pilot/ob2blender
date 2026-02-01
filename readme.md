@@ -36,9 +36,9 @@ Assuming no errors, your model should work in-game when implemented!
 * Automatically convert a material's color to a specified RGB15 value with the naming scheme '15_value'
 	* Ex. naming a material 15_4390 will automatically change its color on export to RGB15 value 4390.
 	* Range: 0 to 32767.
-	* Intended for use with Lost City Model and Anim Editor's color picker tool, as well as recolors in Lost City config files.
+	* Intended for use with Lost City Model and Anim Editor's color picker tool, as well as recolors in Lost City config files. 
 
-## Constraints
+## Instructions
 * Material colors rely on diffuse_color, i.e. viewport display color. Set all material colors there.
 * All vertex values (x, y, z) will round to the nearest integer when exporting. The integer values of an imported .ob2 in Blender are the true values encoded in the file. 
 	Press N in Blender to view the values of a selected vertex.
@@ -52,14 +52,22 @@ Assuming no errors, your model should work in-game when implemented!
 	You can assign Attributes through Mesh -> Set Attribute to assign what you have highlighted. Click multiple faces or vertices to assign multiple.
 * If you do not know which attributes to assign to your model, you can always refer to LostCity Model and Anim Editor or import another model to use as reference.
 * Ex. import a model, highlight the attribute you would like to check, click a vertex/face and then Mesh -> Set Attribute. Usually, it will reveal the attribute value already set there.
-* You can also use Spreadsheet view, though it goes by face/vertex ID and is not very user-friendly.
+* You can also use Spreadsheet view, though it goes by face/vertex ID and is not necessarily user-friendly.
+
+# Textures
+* Create a new material for your texture. On the material, go to Surface -> yellow button on Base Color -> Image Texture <img width="840" height="670" alt="image" src="https://github.com/user-attachments/assets/f75c4eb3-6c26-4b46-b5c6-6368eec86092" />
+* Select a texture. In your ob2blender installation folder, there are already 60 textures in there from vanilla RuneScape, and they are all named 1.png - 60.png. Select the one you wish to use. **The name of your texture MUST be an integer from 0-255 or your model will not export. This is because RuneScape IDs texture images as 0-255 from the cache.**
+* Apply the textures to desired faces, and UV unwrap in the left window. For more information on UV editing in Blender, there are many tutorials online.
+Assuming everything was done properly, your textured model should render correctly in-game. If you are lost on where to start, I would recommend opening up a vanilla textured model e.g. model_301_obj_wear.ob2 from the cache and going off from there. 
+
 
 ## Known Issues
+* Sometimes, when importing an .ob2 file, vertex 0 is degenerate and unselectable. **Beware**: Certain operations on geometry including this vertex, like using Knife on an edge connected to it, will cause Blender to crash. <img width="484" height="490" alt="image" src="https://github.com/user-attachments/assets/171ffc32-22ea-479f-8840-467327312465" />
+	*Solution: put a new vertex at the same position and merge. It will not affect the rest of your model, but make sure the VSKIN attribute is the same if it matters.
 * Models are mirrored horizontally compared to how they are imported in Lost City Model and Anim Editor. Please bear this in mind when making things like arm and leg models.
-* Textures not yet properly implemented. Exporting a textured object will not assign a texture.
 * RGB15 conversion converts color but can show up as 'undefined' in Lost City Model and Anim Editor color picker tool. Likely due to rounding error.
 * Checking attribute values kind of sucks. Looking for a better solution.
-* Useless error saying something about NoneType appears. Models are still exported just fine.
+* Texture implementation is not yet perfect - RuneScape uses a so-called PMN or vector texturing system as opposed to conventional UV, which Blender uses, which can cause complications with conversion. Some faces with texture assigned may lose them. Working on solutions to these problems.
 
 ---
 
@@ -68,6 +76,7 @@ Assuming no errors, your model should work in-game when implemented!
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
