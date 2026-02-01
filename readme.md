@@ -66,7 +66,8 @@ Assuming everything was done properly, your textured model should render correct
 
 ## Known Issues
 * Sometimes, when importing an .ob2 file, vertex 0 is degenerate and unselectable. **Beware**: Certain operations on geometry including this vertex, like using Knife on an edge connected to it, will cause Blender to crash. <img width="484" height="490" alt="image" src="https://github.com/user-attachments/assets/171ffc32-22ea-479f-8840-467327312465" />
-	*Solution: put a new vertex at the same position and merge. It will not affect the rest of your model, but make sure the VSKIN attribute is the same if it matters.
+
+*Solution: put a new vertex at the same position and merge. It will not affect the rest of your model, but make sure the VSKIN attribute is the same if it matters.
 * Models are mirrored horizontally compared to how they are imported in Lost City Model and Anim Editor. Please bear this in mind when making things like arm and leg models.
 * RGB15 conversion converts color but can show up as 'undefined' in Lost City Model and Anim Editor color picker tool. Likely due to rounding error.
 * Checking attribute values kind of sucks. Looking for a better solution.
@@ -79,6 +80,7 @@ Assuming everything was done properly, your textured model should render correct
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
