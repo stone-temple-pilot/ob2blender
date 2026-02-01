@@ -48,8 +48,11 @@ Assuming no errors, your model should work in-game when implemented!
 	* *TSKIN*: Face labels: face, integer
 	* *PRI*: Face priorities: face, integer
 	* *ALPHA*: face alpha: face, integer
-	Warning: do not change the names or value types of these attributes, or the data will not export.
-	You can assign Attributes through Mesh -> Set Attribute to assign what you have highlighted. Click multiple faces or vertices to assign multiple.
+
+*Warning: do not change the names or value types of these attributes, or the data will not export.
+	You can add attributes to the mesh and also assign them through Mesh -> Set Attribute to assign what you have highlighted. Click multiple faces or vertices to assign multiple.
+	<img width="339" height="652" alt="image" src="https://github.com/user-attachments/assets/076c4c73-6ba7-4091-bb7e-ce17a51aa3c1" />
+
 * If you do not know which attributes to assign to your model, you can always refer to LostCity Model and Anim Editor or import another model to use as reference.
 * Ex. import a model, highlight the attribute you would like to check, click a vertex/face and then Mesh -> Set Attribute. Usually, it will reveal the attribute value already set there.
 * You can also use Spreadsheet view, though it goes by face/vertex ID and is not necessarily user-friendly.
@@ -76,6 +79,7 @@ Assuming everything was done properly, your textured model should render correct
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
