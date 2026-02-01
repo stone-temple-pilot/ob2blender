@@ -24,7 +24,7 @@ def create_blender_mesh(rs_mesh, filepath):
     # Create a new mesh
     blender_mesh = bpy.data.meshes.new("Mesh")
 
-    # since it's runescapes XYZ is different, and y axis inverted
+    # since it's runescapes XYZ is different, and y axis inverted?? or maybe not
     vertices = [(rs_mesh.vertices_x[i], rs_mesh.vertices_z[i], -rs_mesh.vertices_y[i]) for i in range(rs_mesh.vertex_count)]
 
     # Set faces
@@ -232,18 +232,22 @@ def get_uv_from_pmn(rs_mesh, i):
                 rs_mesh.vertices_y[rs_mesh.texture_coords_n[coordinate]],
                 rs_mesh.vertices_z[rs_mesh.texture_coords_n[coordinate]]])
 
+    print("import_model.py: Calculating UVs for face", i, "with PMN coords:", p, m, n)
     f1 = m - p
     f2 = n - p
 
     f1DotF1 = np.dot(f1, f1)
     f1DotF2 = np.dot(f1, f2)
     f2DotF2 = np.dot(f2, f2)
+    print("import_model.py: PMN triangle dot products:", f1DotF1, f1DotF2, f2DotF2)
 
-    det = f1DotF1 * f2DotF2 - f1DotF2 * f1DotF2
+    det = (f1DotF1 * f2DotF2) - (f1DotF2 * f1DotF2)
+    print("import_model.py: PMN triangle determinant:", det)
     if det == 0:
-        raise ValueError("PMN triangle is degenerate (determinant is zero).")
-    else:
-        invDet = 1.0 / det
+        print("PMN triangle is degenerate (determinant is zero). Defaulting det to 1.")
+        det = 1
+
+    invDet = 1.0 / det
 
     # Inverse of the Gram matrix
     inverse = np.array([

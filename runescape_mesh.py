@@ -69,9 +69,8 @@ class RunescapeMesh: #todo: recreate this for all parameters in 244-type models 
 
         hasInfo = buffer_indices.read_unsigned_byte() #for shading
         priority = buffer_indices.read_unsigned_byte()
-        print(f"runescape_mesh.py: priority value read: {priority}")
-        #So I had it all wrong. A Priority of 255 means per-face priorities exist.
-        # Any other value means a model-wide priority.
+        #print(f"runescape_mesh.py: priority value read: {priority}")
+        
         hasAlpha = buffer_indices.read_unsigned_byte()
         hasFaceLabels = buffer_indices.read_unsigned_byte() #has TSKIN
         hasVertexLabels = buffer_indices.read_unsigned_byte() 
@@ -81,59 +80,59 @@ class RunescapeMesh: #todo: recreate this for all parameters in 244-type models 
         vertices_z_length = buffer_indices.read_unsigned_short()
         face_indices_length = buffer_indices.read_unsigned_short()
 
-        # print(f"runescape_mesh.py: vertex_count: {vertex_count}, face_count: {face_count}, textured_face_count: {textured_face_count}")
-        # print(f"runescape_mesh.py: hasInfo: {hasInfo}, priority: {priority}, hasAlpha: {hasAlpha}, hasFaceLabels: {hasFaceLabels}, hasVertexLabels: {hasVertexLabels}")
-        # print(f"runescape_mesh.py: vertices_x_length: {vertices_x_length}, vertices_y_length: {vertices_y_length}, vertices_z_length: {vertices_z_length}, face_indices_length: {face_indices_length}")
+        print(f"runescape_mesh.py: vertex_count: {vertex_count}, face_count: {face_count}, textured_face_count: {textured_face_count}")
+        print(f"runescape_mesh.py: hasInfo: {hasInfo}, priority: {priority}, hasAlpha: {hasAlpha}, hasFaceLabels: {hasFaceLabels}, hasVertexLabels: {hasVertexLabels}")
+        print(f"runescape_mesh.py: vertices_x_length: {vertices_x_length}, vertices_y_length: {vertices_y_length}, vertices_z_length: {vertices_z_length}, face_indices_length: {face_indices_length}")
 
         pos = 0
 
         vertex_flags_offset = pos
         pos += vertex_count
-        # print(f"runescape_mesh.py: vertex_flags_offset: {vertex_flags_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: vertex_flags_offset: {vertex_flags_offset}, pos after: {pos}")
 
         face_indices_flag_offset = pos
         pos += face_count
-        # print(f"runescape_mesh.py: face_indices_flag_offset: {face_indices_flag_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: face_indices_flag_offset: {face_indices_flag_offset}, pos after: {pos}")
 
         face_priority_offset = pos
         if priority == 255:
             pos += face_count
-            # print(f"runescape_mesh.py: face_priority_offset: {face_priority_offset}, pos after: {pos}")
+            print(f"runescape_mesh.py: face_priority_offset: {face_priority_offset}, pos after: {pos}")
         face_labels_offset = pos
         if hasFaceLabels == 1:
             pos += face_count
-            # print(f"runescape_mesh.py: face_labels_offset: {face_labels_offset}, pos after: {pos}")
+            print(f"runescape_mesh.py: face_labels_offset: {face_labels_offset}, pos after: {pos}")
         face_info_offset = pos
         if hasInfo == 1:
             pos += face_count
-            # print(f"runescape_mesh.py: face_info_offset: {face_info_offset}, pos after: {pos}")
+            print(f"runescape_mesh.py: face_info_offset: {face_info_offset}, pos after: {pos}")
 
         vertex_labels_offset = pos
         if hasVertexLabels == 1:
             pos += vertex_count
-            # print(f"runescape_mesh.py: vertex_labels_offset: {vertex_labels_offset}, pos after: {pos}")
+            print(f"runescape_mesh.py: vertex_labels_offset: {vertex_labels_offset}, pos after: {pos}")
         face_alpha_offset = pos
         if hasAlpha == 1:
             pos += face_count
-            # print(f"runescape_mesh.py: face_alpha_offset: {face_alpha_offset}, pos after: {pos}")
+            print(f"runescape_mesh.py: face_alpha_offset: {face_alpha_offset}, pos after: {pos}")
         face_indices_offset = pos
         pos += face_indices_length
-        # print(f"runescape_mesh.py: face_indices_offset: {face_indices_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: face_indices_offset: {face_indices_offset}, pos after: {pos}")
         face_colors_offset = pos
         pos += face_count * 2
-        # print(f"runescape_mesh.py: face_colors_offset: {face_colors_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: face_colors_offset: {face_colors_offset}, pos after: {pos}")
         textured_face_offset = pos
         pos += textured_face_count * 6
-        # print(f"runescape_mesh.py: textured_face_offset: {textured_face_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: textured_face_offset: {textured_face_offset}, pos after: {pos}")
         vertices_x_offset = pos
         pos += vertices_x_length
-        #   print(f"runescape_mesh.py: vertices_x_offset: {vertices_x_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: vertices_x_offset: {vertices_x_offset}, pos after: {pos}")
         vertices_y_offset = pos
         pos += vertices_y_length
-        # print(f"runescape_mesh.py: vertices_y_offset: {vertices_y_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: vertices_y_offset: {vertices_y_offset}, pos after: {pos}")
         vertices_z_offset = pos
         pos += vertices_z_length
-        # print(f"runescape_mesh.py: vertices_z_offset: {vertices_z_offset}, pos after: {pos}")
+        print(f"runescape_mesh.py: vertices_z_offset: {vertices_z_offset}, pos after: {pos}")
 
         self.vertices_x = [0] * vertex_count
         self.vertices_y = [0] * vertex_count
@@ -147,7 +146,7 @@ class RunescapeMesh: #todo: recreate this for all parameters in 244-type models 
             self.texture_coords_p = [0] * textured_face_count
             self.texture_coords_m = [0] * textured_face_count
             self.texture_coords_n = [0] * textured_face_count
-#you'll be referring to these for proper order when you create the exporter
+
 #initialize arrays based on flags.
         if hasVertexLabels == 1:
             self.vertex_labels = [0] * vertex_count
