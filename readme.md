@@ -28,8 +28,6 @@ Companion thread on Lost City forums: https://lostcity.rs/t/ob2blender-lost-city
 
 Assuming no errors, your model should work in-game when implemented!
 
-<img width="799" height="611" alt="image" src="https://github.com/user-attachments/assets/d57b20d0-4f92-418d-88b8-8f019ae7be9f" />
-
 ## Features
 * Batch exporting - edit and export multiple models at a time. One file per highlighted object, filename is object name. **Beware of overwriting files in your directory.**
 * Supports exporting double-sided faces. Make sure to tick on Backface Culling to view them properly.
@@ -41,6 +39,8 @@ Assuming no errors, your model should work in-game when implemented!
 	* Range: 0 to 32767.
 	* Intended for use with Lost City Model and Anim Editor's color picker tool, as well as recolors in Lost City config files.
     * You can also create an RGB15 material using the toolbar!
+
+<img width="799" height="611" alt="image" src="https://github.com/user-attachments/assets/d57b20d0-4f92-418d-88b8-8f019ae7be9f" />
 
 ## Instructions
 * Material colors rely on diffuse_color, i.e. viewport display color. Set all material colors there.
@@ -85,6 +85,7 @@ Assuming everything was done properly, your textured model should render correct
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
