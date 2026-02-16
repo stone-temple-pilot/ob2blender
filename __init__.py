@@ -15,6 +15,20 @@ bl_info = {
     "category":     "Import-Export",
 }
 
+# Module reloading logic for proper addon updates
+if "bpy" in locals():
+    import importlib
+    if "import_model" in locals():
+        importlib.reload(import_model)
+    if "export_model" in locals():
+        importlib.reload(export_model)
+    if "byte_buffer" in locals():
+        importlib.reload(byte_buffer)
+    if "runescape_mesh" in locals():
+        importlib.reload(runescape_mesh)
+
+from . import import_model, export_model, byte_buffer, runescape_mesh
+
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 from bpy.types import Operator
 
@@ -31,8 +45,7 @@ class ImportOB2(Operator, ImportHelper):
     filter_glob = StringProperty( default="*.ob2", options={"HIDDEN"})
     
     def execute( self, context ):
-        import ob2blender.import_model
-        return ob2blender.import_model.load(self)
+        return import_model.load(self)
 
 class ExportOB2(Operator, ExportHelper):
     bl_idname = "export.model"
@@ -43,11 +56,10 @@ class ExportOB2(Operator, ExportHelper):
     filter_glob = StringProperty( default="*.ob2", options={"HIDDEN"})
     
     def execute( self, context ):
-        import ob2blender.export_model
         directory = os.path.dirname(self.filepath)
         self.directory = directory
         self.export_as_one = True
-        ob2blender.export_model.export_to_ob2(self.directory, False)
+        export_model.export_to_ob2(self.directory, False)
         return {'FINISHED'}
 # ################################################################
 # Common
@@ -137,7 +149,7 @@ def _read_active_attributes():
             for e in reversed(bm.select_history):
                 if isinstance(e, bmesh.types.BMFace):
                     f_elem = e
-                break
+                    break
         if f_elem is None:
             for face in bm.faces:
                 if face.select:
@@ -716,10 +728,10 @@ classes = (
 
 # Update callbacks start the picker timer when any picker is enabled
 def _update_timer_pick(self, context):
-    if (context.scene.ob2_vskin_pick,
-        context.scene.ob2_tskin_pick,
-        context.scene.ob2_pri_pick,
-        context.scene.ob2_alpha_pick):
+    if (context.scene.ob2_vskin_pick
+        or context.scene.ob2_tskin_pick
+        or context.scene.ob2_pri_pick
+        or context.scene.ob2_alpha_pick):
         _start_picker_timer()
 
 def _update_ob2_vskin_foldout(self, context):
