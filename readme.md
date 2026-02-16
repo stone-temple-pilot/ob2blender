@@ -4,7 +4,7 @@
 This add-on allows you to import, edit and export old format RuneScape models (.ob2 and .dat) all within Blender!
 Built on Blender 4.5.
 
-This project is in alpha. Not all features are fully implemented yet, see 'Known Issues' below.
+**See 'Known Issues' at the bottom to avoid Blender crashes and protect your work.**
 
 Optimized for use with Lost City: https://github.com/LostCityRS/Server
  
@@ -70,6 +70,7 @@ Assuming everything was done properly, your textured model should render correct
 
 
 ## Known Issues
+* Beware of naming when exporting your models. They are saved as object_name.ob2 and so may overwrite files in the directory. What you type in the file name text box does nothing.
 * Sometimes, when importing an .ob2 file, vertex 0 is degenerate and unselectable. **Beware**: Certain operations on geometry including this vertex, like using Knife on an edge connected to it, will cause Blender to crash. <img width="484" height="490" alt="image" src="https://github.com/user-attachments/assets/171ffc32-22ea-479f-8840-467327312465" />
 
 *Solution: put a new vertex at the same position and merge. It will not affect the rest of your model, but make sure the VSKIN attribute is the same if it matters.
@@ -84,6 +85,7 @@ Assuming everything was done properly, your textured model should render correct
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
