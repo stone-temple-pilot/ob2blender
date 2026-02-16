@@ -28,15 +28,19 @@ Companion thread on Lost City forums: https://lostcity.rs/t/ob2blender-lost-city
 
 Assuming no errors, your model should work in-game when implemented!
 
+<img width="799" height="611" alt="image" src="https://github.com/user-attachments/assets/d57b20d0-4f92-418d-88b8-8f019ae7be9f" />
+
 ## Features
 * Batch exporting - edit and export multiple models at a time. One file per highlighted object, filename is object name. **Beware of overwriting files in your directory.**
-* Supports double-sided faces. Make sure to tick on Backface Culling to view them properly.
+* Supports exporting double-sided faces. Make sure to tick on Backface Culling to view them properly.
+* New toolbar to facilitate vertex and face labeling, as well as HSL16/RGB15 color tools useful for RuneScape.
 * Priority, face labels, vertex labels, and alpha are all assigned as attributes; see below.
 * Smooth- and flat-shading support.
 * Automatically convert a material's color to a specified RGB15 value with the naming scheme '15_value'
 	* Ex. naming a material 15_4390 will automatically change its color on export to RGB15 value 4390.
 	* Range: 0 to 32767.
-	* Intended for use with Lost City Model and Anim Editor's color picker tool, as well as recolors in Lost City config files. 
+	* Intended for use with Lost City Model and Anim Editor's color picker tool, as well as recolors in Lost City config files.
+    * You can also create an RGB15 material using the toolbar!
 
 ## Instructions
 * Material colors rely on diffuse_color, i.e. viewport display color. Set all material colors there.
@@ -51,6 +55,7 @@ Assuming no errors, your model should work in-game when implemented!
 
 *Warning: do not change the names or value types of these attributes, or the data will not export.
 	You can add attributes to the mesh and also assign them through Mesh -> Set Attribute to assign what you have highlighted. Click multiple faces or vertices to assign multiple.
+	The added Toolbar (N -> click OB2 tab) streamlines this process for you. Try it out!
 	<img width="339" height="652" alt="image" src="https://github.com/user-attachments/assets/076c4c73-6ba7-4091-bb7e-ce17a51aa3c1" />
 
 * If you do not know which attributes to assign to your model, you can always refer to LostCity Model and Anim Editor or import another model to use as reference.
@@ -69,8 +74,7 @@ Assuming everything was done properly, your textured model should render correct
 
 *Solution: put a new vertex at the same position and merge. It will not affect the rest of your model, but make sure the VSKIN attribute is the same if it matters.
 * Models are mirrored horizontally compared to how they are imported in Lost City Model and Anim Editor. Please bear this in mind when making things like arm and leg models.
-* RGB15 conversion converts color but can show up as 'undefined' in Lost City Model and Anim Editor color picker tool. Likely due to rounding error.
-* Checking attribute values kind of sucks. Looking for a better solution.
+* RGB15 conversion can be janky - likely due to off-by-one rounding errors.
 * Texture implementation is not yet perfect - RuneScape uses a so-called PMN or vector texturing system as opposed to conventional UV, which Blender uses, which can cause complications with conversion. Some faces with texture assigned may lose them. Working on solutions to these problems.
 
 ---
@@ -80,6 +84,7 @@ Assuming everything was done properly, your textured model should render correct
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
