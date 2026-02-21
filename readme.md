@@ -1,10 +1,11 @@
 <img width="969" height="524" alt="image" src="https://github.com/user-attachments/assets/f26a9666-e021-4a4f-b4f3-19db8c7dc47f" />
-**Demo Video - relabeling an NPC**
-https://www.youtube.com/watch?v=nTk1lUacS6Y
 
 ## Description
 This add-on allows you to import, edit and export old format RuneScape models (.ob2 and .dat) all within Blender!
 Built on Blender 4.5.
+
+**Demo Video - relabeling an NPC**
+https://www.youtube.com/watch?v=nTk1lUacS6Y
 
 **See 'Known Issues' at the bottom to avoid Blender crashes and protect your work.**
 
@@ -88,6 +89,7 @@ Assuming everything was done properly, your textured model should render correct
 *A big thanks to Pazaz, AmVoidGuy, and the rest of the Lost City community for inspiring this project.*
 
 *Special thanks to Tamateea for providing the basis of this project.*
+
 
 
 
