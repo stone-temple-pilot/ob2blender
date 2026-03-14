@@ -4,8 +4,8 @@
 This add-on allows you to import, edit and export old format RuneScape models (.ob2 and .dat) all within Blender!
 Built on Blender 4.5.
 
-**Demo Video - relabeling an NPC**
-https://www.youtube.com/watch?v=nTk1lUacS6Y
+**Basic Tutorial Video**
+https://www.youtube.com/watch?v=q_K8svLTR5Y
 
 **See 'Known Issues' at the bottom to avoid Blender crashes and protect your work.**
 
